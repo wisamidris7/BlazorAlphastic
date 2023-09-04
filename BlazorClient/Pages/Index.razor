@@ -1,0 +1,158 @@
+﻿@page "/"
+@using LLama;
+@using LLama.Common;
+
+<PageTitle>Index</PageTitle>
+
+<div class="page">
+    @* <div class="sidebar">
+    <NavMenu />
+    </div> *@
+
+    <main>
+        <div class="top-row px-4">
+            @if (LoadingModel)
+            {
+                @("Loading Alphastic Model")
+            }
+            else
+            {
+                @("Alphastic Chat")
+
+                <button class="btn btn-danger" @onclick="ClearContext">Clear Context</button>
+            }
+        </div>
+
+        <article class="content px-4">
+            @foreach (var item in Items.ToList())
+            {
+                @if (item.ClearContext)
+                {
+                    <div class="alert alert-danger mt-4 text-center">
+                        Context Cleared
+                    </div>
+                }
+                else
+                {
+                    <SurveyPrompt Title="@item.ChatText" User="@item.User" />
+                }
+            }
+        </article>
+    </main>
+</div>
+
+<div class="chat-input"> <input @bind-value="User" @oninput="(e) => _user = e.Value.ToString()" @onkeydown="UserChatChanged" disabled="@ChatDisabiled" class="form-control" /></div>
+@code {
+    public string _user = string.Empty;
+    public string User { get => _user; set => _user = value; }
+    public bool LoadingModel = true;
+    public bool ChatDisabiled = true;
+    public ChatSession? session = null!;
+    protected override void OnInitialized()
+    {
+        Task.Run(() =>
+        {
+            ChatDisabiled = true;
+            string modelPath = "C:\\Users\\Administrator\\Downloads\\wizardLM-7B.ggmlv3.q4_0.bin"; // change it to your own model path
+            var prompt = "Hello";
+
+            var ex = new InteractiveExecutor(new LLamaModel(new ModelParams(modelPath, contextSize: 1024, seed: 1337, gpuLayerCount: 5)));
+            session = new ChatSession(ex);
+            LoadingModel = false;
+            InvokeAsync(StateHasChanged);
+            foreach (var text in session.Chat(prompt, new InferenceParams() { Temperature = 0.6f, AntiPrompts = new List<string> { "Wisam" } }))
+            {
+                if (Items.FirstOrDefault() == null)
+                {
+                    Items.Add(new()
+                        {
+                            ChatText = text,
+                            User = false
+                        });
+                    InvokeAsync(StateHasChanged);
+                }
+                else
+                {
+                    Items.FirstOrDefault()!.ChatText += text;
+                    InvokeAsync(StateHasChanged);
+                }
+            }
+            ChatDisabiled = false;
+            InvokeAsync(StateHasChanged);
+            // session.SaveSession("C:SavedSessionPath");
+        });
+        base.OnInitialized();
+    }
+    public List<ChatItem> Items { get; set; } = new();
+    public class ChatItem
+    {
+        public string ChatText { get; set; }
+        public bool User { get; set; }
+
+        public bool ClearContext { get; set; }
+    }
+    public void ClearContext()
+    {
+        Task.Run(() =>
+        {
+            Items.Add(new()
+                {
+                    ClearContext = true
+                });
+            ChatDisabiled = true;
+            InvokeAsync(StateHasChanged);
+            string modelPath = "C:\\Users\\Administrator\\Downloads\\wizardLM-7B.ggmlv3.q4_0.bin"; // change it to your own model path
+
+            var ex = new InteractiveExecutor(new LLamaModel(new ModelParams(modelPath, contextSize: 1024, seed: 1337, gpuLayerCount: 5)));
+
+            session = new ChatSession(ex);
+            LoadingModel = false;
+            Items.Add(new()
+                {
+                    ChatText = string.Empty,
+                    User = false
+                });
+            InvokeAsync(StateHasChanged);
+            foreach (var text in session.Chat("Hello", new InferenceParams() { Temperature = 0.6f, AntiPrompts = new List<string> { "Wisam" } }))
+            {
+                Items.LastOrDefault()!.ChatText += text;
+                InvokeAsync(StateHasChanged);
+            }
+            ChatDisabiled = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+    public void UserChatChanged(KeyboardEventArgs args)
+    {
+        if (args.Code != "Enter")
+        {
+            return;
+        }
+        InvokeAsync(StateHasChanged);
+        var promot = _user;
+        _user = string.Empty;
+        Task.Run(() =>
+        {
+            Items.Add(new()
+                {
+                    ChatText = promot,
+                    User = true
+                });
+            InvokeAsync(StateHasChanged);
+            Items.Add(new()
+                {
+                    ChatText = string.Empty,
+                    User = false
+                });
+            ChatDisabiled = true;
+            InvokeAsync(StateHasChanged);
+            foreach (var text in session.Chat(promot, new InferenceParams() { Temperature = 0.6f, AntiPrompts = new List<string> { "Wisam" } }))
+            {
+                Items.LastOrDefault()!.ChatText += text;
+                InvokeAsync(StateHasChanged);
+            }
+            ChatDisabiled = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+}
