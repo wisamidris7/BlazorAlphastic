@@ -1,12 +1,12 @@
-﻿<div class="@($"alert alert-{(User ?"success" :"secondary")} mt-4 {(User ?"user" :"ai")}")">
+﻿@using WSM.Markdown
+<div class="@($"alert alert-{(User ?"success" :"secondary")} mt-4 {(User ?"user" :"ai")}")">
     <span class="@(User ? "fas fa-user" : "fab fa-confluence")" aria-hidden="true"></span>
     <strong>@(User ? "User" : "Alphastic")</strong>
     <br/>
-    @Title
+    <ReadmeView ChangeOnRender Content="@Title" />
 </div>
 
 @code {
-    // Demonstrates how a parent component can supply parameters
     [Parameter]
     public string? Title { get; set; }
     [Parameter]

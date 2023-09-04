@@ -55,9 +55,9 @@
             ChatDisabiled = true;
             string modelPath = "C:\\Users\\Administrator\\Downloads\\wizardLM-7B.ggmlv3.q4_0.bin"; // change it to your own model path
             var prompt = "Hello";
-
-            var ex = new InteractiveExecutor(new LLamaModel(new ModelParams(modelPath, contextSize: 1024, seed: 1337, gpuLayerCount: 5)));
-            session = new ChatSession(ex);
+                var ex = new InteractiveExecutor(new LLamaModel(new ModelParams(modelPath, contextSize: 1024, seed: 1337, gpuLayerCount: 5)));
+                session = new ChatSession(ex);
+            
             LoadingModel = false;
             InvokeAsync(StateHasChanged);
             foreach (var text in session.Chat(prompt, new InferenceParams() { Temperature = 0.6f, AntiPrompts = new List<string> { "Wisam" } }))
