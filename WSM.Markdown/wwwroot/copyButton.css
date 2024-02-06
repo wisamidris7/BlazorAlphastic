@@ -1,0 +1,12 @@
+﻿
+pre {
+    position: relative;
+    padding: 1em;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+code {
+    display: block;
+}

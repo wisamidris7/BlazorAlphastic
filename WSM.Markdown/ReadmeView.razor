@@ -1,0 +1,16 @@
+﻿@using Markdig
+@using Microsoft.JSInterop;
+@inject IJSRuntime jsRuntime
+
+@((MarkupString)Markdown.ToHtml(Content))
+
+@code {
+    [Parameter] public string Content { get; set; }
+    [Parameter] public bool ChangeOnRender { get; set; }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (ChangeOnRender || firstRender)
+            jsRuntime.InvokeVoidAsync("initPrism");
+        base.OnAfterRender(firstRender);
+    }
+}
